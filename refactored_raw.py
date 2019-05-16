@@ -3,6 +3,7 @@ import pygame
 import pandas as pd
 import datetime
 from copy import copy
+from time import sleep
 
 DEBUG = False
 
@@ -56,8 +57,8 @@ class MyoRawHandler:
             -> handle_event function:
 
         """
-        self.m.run(1)
-        return {'emg': self.emg, 'gyro': self.gyro, 'acc': self.acc}
+        self.m.run(1000)
+        return {'emg': self.emg, 'gyro': self.gyro, 'orientation': self.quat}
 
     def capture_movement(self, captures=400, description=""):
         self.tag = "myo"
@@ -65,7 +66,7 @@ class MyoRawHandler:
         self.height = 200
         self.screen = pygame.display.set_mode((self.width, self.height))
 
-        self.all_data = pd.DataFrame(columns=["Timestamp", "Sensor 0", "Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4", "Sensor 5", "Sensor 6", "Sensor 7", "Gyro 0", "Gyro 1", "Gyro 2", "Acc 1", "Acc 2", "Acc 3"])
+        self.all_data = pd.DataFrame(columns=["Sensor 0", "Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4", "Sensor 5", "Sensor 6", "Sensor 7", "Gyro 0", "Gyro 1", "Gyro 2", "Orientation 0", "Orientation 1", "Orientation 2", "Orientation 3"])
 
         while True:
             for event in pygame.event.get():
@@ -87,31 +88,32 @@ class MyoRawHandler:
                             if len(emg_data) >= 8:
                                 break
 
-                        batch_df = pd.DataFrame(columns=["Timestamp", "Sensor 0", "Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4", "Sensor 5", "Sensor 6", "Sensor 7", "Gyro 0", "Gyro 1", "Gyro 2", "Acc 1", "Acc 2", "Acc 3"])
+                        batch_df = pd.DataFrame(columns=["Sensor 0", "Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4", "Sensor 5", "Sensor 6", "Sensor 7", "Gyro 0", "Gyro 1", "Gyro 2", "Orientation 0", "Orientation 1", "Orientation 2", "Orientation 3"])
 
                         for i in range(captures):
                             batch_data = self.get_data()
                             emg = [e for e in batch_data["emg"]]
                             gyro = [g for g in batch_data["gyro"]]
-                            acc = [a for a in batch_data["acc"]]
-                            all_data = emg + gyro + acc
-
-                            if DEBUG:
-                                print(all_data)
+                            #acc = [a for a in batch_data["acc"]]
+                            orient = [o for o in batch_data["orientation"]]
+                            all_data = emg + gyro + orient
+                            #print(len(all_data))
+                            #print(all_data)
 
                             try:
-                                batch_df = batch_df.append({'Timestamp': datetime.datetime.now().timestamp(), 'Sensor 0': all_data[0], 'Sensor 1': all_data[1], 'Sensor 2': all_data[2], 'Sensor 3': all_data[3], 'Sensor 4': all_data[4],'Sensor 5': all_data[5],'Sensor 6': all_data[6],'Sensor 7': all_data[7], 'Gyro 0': all_data[8], 'Gyro 1': all_data[9], 'Gyro 2': all_data[10], 'Acc 1': all_data[11], 'Acc 2': all_data[12], 'Acc 3': all_data[13]}, ignore_index=True)
+                                batch_df = batch_df.append({'Sensor 0': all_data[0], 'Sensor 1': all_data[1], 'Sensor 2': all_data[2], 'Sensor 3': all_data[3], 'Sensor 4': all_data[4],'Sensor 5': all_data[5],'Sensor 6': all_data[6],'Sensor 7': all_data[7], 'Gyro 0': all_data[8], 'Gyro 1': all_data[9], 'Gyro 2': all_data[10], 'Orientation 0': all_data[11], 'Orientation 1': all_data[12], 'Orientation 2': all_data[13], 'Orientation 3': all_data[14]}, ignore_index=True)
                             except:
                                 pass
 
                             print(batch_df.shape)
-
                         self.all_data = self.all_data.append(batch_df)
                         print("All data: ", self.all_data)
                         print("----- End of movement capture -----")
                     if event.key == pygame.K_c:
                         del self.all_data
                         self.tag = raw_input("Digite o novo tag do movimento")
+
+
 
 def get_loop():
     while True:
@@ -120,5 +122,5 @@ def get_loop():
 
 myo = MyoRawHandler()
 #myo.test_hz()
-myo.capture_movement(captures=2000, description="parado-luiza")
+myo.capture_movement(captures=400, description="movimento-david-defato")
 #get_loop()

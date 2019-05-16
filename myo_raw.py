@@ -21,6 +21,8 @@ from serial.tools.list_ports import comports
 
 from common import *
 
+import signal
+
 def multichr(ords):
     if sys.version_info[0] >= 3:
         return bytes(ords)
@@ -68,25 +70,35 @@ class Packet(object):
 class BT(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
     def __init__(self, tty):
-        self.ser = serial.Serial(port=tty, baudrate=9600, dsrdtr=1)
+        self.ser = serial.Serial(port=tty, baudrate=9600, dsrdtr=1, timeout=0.2)
         self.buf = []
         self.lock = threading.Lock()
         self.handlers = []
+        signal.signal(signal.SIGALRM, self.handler)
+        signal.alarm(10)
+
+    def handler(self, signum, frame):
+        print("Destravou porra")
+        raise Exception("end of time")
 
     ## internal data-handling methods
     def recv_packet(self, timeout=None):
         t0 = time.time()
         self.ser.timeout = None
+
         while timeout is None or time.time() < t0 + timeout:
             if timeout is not None: self.ser.timeout = t0 + timeout - time.time()
-            c = self.ser.read()
-            if not c: return None
-
-            ret = self.proc_byte(ord(c))
-            if ret:
-                if ret.typ == 0x80:
-                    self.handle_event(ret)
-                return ret
+            try:
+                c = self.ser.read()
+                if not c:
+                    return None
+                ret = self.proc_byte(ord(c))
+                if ret:
+                    if ret.typ == 0x80:
+                        self.handle_event(ret)
+                    return ret
+            except Exception:
+                pass
 
     def recv_packets(self, timeout=.5):
         res = []
@@ -170,7 +182,6 @@ class BT(object):
 
             ## no timeout, so p won't be None
             if p.typ == 0: return p
-
             ## not a response: must be an event
             self.handle_event(p)
 
@@ -232,7 +243,6 @@ class MyoRaw(object):
         print('firmware version: %d.%d.%d.%d' % (v0, v1, v2, v3))
 
         self.old = (v0 == 0)
-
         if self.old:
             ## don't know what these do; Myo Connect sends them, though we get data
             ## fine without them
@@ -255,7 +265,7 @@ class MyoRaw(object):
             C = 1000
             emg_hz = 50
             ## strength of low-pass filtering of EMG data
-            emg_smooth = 100
+            emg_smooth = 1
 
             imu_hz = 50
 
@@ -270,16 +280,21 @@ class MyoRaw(object):
             self.write_attr(0x1d, b'\x01\x00')
             ## enable on/off arm notifications
             self.write_attr(0x24, b'\x02\x00')
-
             # self.write_attr(0x19, b'\x01\x03\x00\x01\x01')
-            self.start_raw()
+
+            #self.start_raw()
+            self.mc_start_collection()
 
         ## add data handlers
         def handle_data(p):
             if (p.cls, p.cmd) != (4, 5): return
 
+            print('0')
+
             c, attr, typ = unpack('BHB', p.payload[:4])
             pay = p.payload[5:]
+
+            print('1')
 
             if attr == 0x27:
                 vals = unpack('8HB', pay)
