@@ -3,7 +3,7 @@ import pygame
 import pandas as pd
 import datetime
 from copy import copy
-from time import sleep
+from time import sleep, time
 
 DEBUG = False
 
@@ -60,7 +60,7 @@ class MyoRawHandler:
         self.m.run(1000)
         return {'emg': self.emg, 'gyro': self.gyro, 'orientation': self.quat}
 
-    def capture_movement(self, captures=400, description=""):
+    def capture_movement(self, label, captures=400, description=""):
         self.tag = "myo"
         self.width = 200
         self.height = 200
@@ -88,9 +88,13 @@ class MyoRawHandler:
                             if len(emg_data) >= 8:
                                 break
 
-                        batch_df = pd.DataFrame(columns=["Sensor 0", "Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4", "Sensor 5", "Sensor 6", "Sensor 7", "Gyro 0", "Gyro 1", "Gyro 2", "Orientation 0", "Orientation 1", "Orientation 2", "Orientation 3"])
+                        batch_df = pd.DataFrame(columns=["Timestamp", "Label",  "Sensor 0", "Sensor 1", "Sensor 2", "Sensor 3", "Sensor 4", "Sensor 5", "Sensor 6", "Sensor 7", "Gyro 0", "Gyro 1", "Gyro 2", "Orientation 0", "Orientation 1", "Orientation 2", "Orientation 3"])
 
+                        start_time = time()
+                        reading_time = time()
                         for i in range(captures):
+                        #while reading_time-start_time < 1:
+                            reading_time = time()
                             batch_data = self.get_data()
                             emg = [e for e in batch_data["emg"]]
                             gyro = [g for g in batch_data["gyro"]]
@@ -101,7 +105,7 @@ class MyoRawHandler:
                             #print(all_data)
 
                             try:
-                                batch_df = batch_df.append({'Sensor 0': all_data[0], 'Sensor 1': all_data[1], 'Sensor 2': all_data[2], 'Sensor 3': all_data[3], 'Sensor 4': all_data[4],'Sensor 5': all_data[5],'Sensor 6': all_data[6],'Sensor 7': all_data[7], 'Gyro 0': all_data[8], 'Gyro 1': all_data[9], 'Gyro 2': all_data[10], 'Orientation 0': all_data[11], 'Orientation 1': all_data[12], 'Orientation 2': all_data[13], 'Orientation 3': all_data[14]}, ignore_index=True)
+                                batch_df = batch_df.append({"Timestamp": reading_time-start_time, 'Label': label, 'Sensor 0': all_data[0], 'Sensor 1': all_data[1], 'Sensor 2': all_data[2], 'Sensor 3': all_data[3], 'Sensor 4': all_data[4],'Sensor 5': all_data[5],'Sensor 6': all_data[6],'Sensor 7': all_data[7], 'Gyro 0': all_data[8], 'Gyro 1': all_data[9], 'Gyro 2': all_data[10], 'Orientation 0': all_data[11], 'Orientation 1': all_data[12], 'Orientation 2': all_data[13], 'Orientation 3': all_data[14]}, ignore_index=True)
                             except:
                                 pass
 
@@ -122,5 +126,5 @@ def get_loop():
 
 myo = MyoRawHandler()
 #myo.test_hz()
-myo.capture_movement(captures=400, description="movimento-david-defato")
+myo.capture_movement(label=1, captures=600, description="movimento-david")
 #get_loop()

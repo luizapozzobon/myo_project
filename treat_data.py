@@ -21,9 +21,26 @@ def zero_crossings(df):
         zcr.append(np.where(np.diff(np.sign(column))))
     return zcr
 
-dados = pd.read_csv('./datasets/myo-parado-david3-2019-05-09 10:32:57-.csv')
+def signal_change(df):
+    sc = []
+    for i in range(0, 8):
+        signal_changed = []
+        changed_count = 0
+        column = df.loc[:, 'Sensor '+str(i)]
+        for j in range(1, 700-1):
+            val1 = np.abs(column[j]) - np.abs(column[j-1])
+            val2 = np.abs(column[j+1]) - np.abs(column[j])
+            #print(column[j-1], column[j], column[j+1], np.sign(val1), np.sign(val2), np.sign(val1)+np.sign(val2))
+            if np.sign(val1) + np.sign(val2) == 0 and (val1 != 0 or val2 != 0):
+                signal_changed.append(j)
+                changed_count += 1
+        print("Mudanças de sinal/Contador do Sensor {}: {} / {}".format(i, signal_changed, changed_count))
+    return signal_changed
+
+dados = pd.read_csv('./datasets/myo-movimento-david-2019-06-06 11:39:44-.csv')
 print(dados.head(10))
 dados_novo = calc_mean_and_variance(dados)
 zero = zero_crossings(dados_novo)
-for i in range(8):
-    print(zero[i])
+signal_change(dados_novo)
+#for i in range(8):
+#    print(zero[i])
