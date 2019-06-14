@@ -126,5 +126,5 @@ def get_loop():
 
 myo = MyoRawHandler()
 #myo.test_hz()
-myo.capture_movement(label=1, captures=500, description="movimento-david")
+myo.capture_movement(label=0, captures=500, description="movimento-moises-ruim")
 #get_loop()
