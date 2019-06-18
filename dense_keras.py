@@ -106,36 +106,27 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import Activation
 from tensorflow.keras.optimizers import Adam
 
 input_shape = (X_train.shape[1], X_train.shape[2])
 print(input_shape, y_train.shape, X_train.shape)
 
-# LER ISSO
-# https://stackoverflow.com/questions/53382353/lstm-input-shape-for-multivariate-time-series
-
 optimizer = Adam(lr=0.1, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.01, amsgrad=False)
 
 classifier = Sequential()
 
-classifier.add(LSTM(units=50, return_sequences=True, input_shape=input_shape))
-classifier.add(Dropout(0.1))
-
-classifier.add(LSTM(units = 50, return_sequences = True))
-classifier.add(Dropout(0.1))
-
-classifier.add(LSTM(units = 50, return_sequences = True))
-classifier.add(Dropout(0.1))
-
-classifier.add(LSTM(units = 50))
-classifier.add(Dropout(0.1))
-
+classifier.add(Dense(32, input_dim=X_train.shape[1]*X_train.shape[2]))
+classifier.add(Activation('relu'))
 classifier.add(Dense(units = 64))
+classifier.add(Activation('relu'))
 classifier.add(Dense(units = 128))
-
+classifier.add(Activation('relu'))
 classifier.add(Dense(units = 1, activation="softmax"))
 
 classifier.summary()
+
+X_train = X_train.reshape(X_train.shape[0], X_train.shape[1]*X_train.shape[2])
 
 classifier.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics=["accuracy"])
 
