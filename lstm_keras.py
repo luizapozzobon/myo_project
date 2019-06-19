@@ -64,9 +64,6 @@ print(x_test.head(), x_test.shape)
 print(y_train)
 print(y_test)
 
-#x_train = x_train.T
-#x_test = x_test.T
-
 print(x_train.shape)
 
 X_train = np.array(x_train)
@@ -77,10 +74,8 @@ y_train = np.array(y_train)
 #   -> x = time steps (quantas leituras)
 #   -> y = input_units
 # https://medium.com/@shivajbd/understanding-input-and-output-shape-in-lstm-keras-c501ee95c65e
-
 # samples, timesteps, features
 
-# Reshape to one flatten vector
 X_train = X_train.reshape(43, 500, 15)
 print(X_train.shape)
 
@@ -91,8 +86,6 @@ for i, label in enumerate(y_train):
         new_y_train.append(0)
     elif 1 in label:
         new_y_train.append(1)
-#X_train = X_train.reshape(X_train.shape[0]*X_train.shape[1], 1)
-#X_train = sc.fit_transform(X_train)
 
 print(X_train)
 print(y_train)

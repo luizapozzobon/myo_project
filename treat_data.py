@@ -8,13 +8,14 @@ def calc_mean_and_variance(df):
     scaler = preprocessing.MinMaxScaler(feature_range=(-127, 127))
     #print('loc', df.iloc[:, 2:10])
     df.iloc[:, 2:10]        = pd.DataFrame(scaler.fit_transform(df.iloc[:, 2:10]), columns=df.columns[2:10])
-    df['Sensor Mean']       = df.iloc[:, 2:10].abs().mean(axis=1)
-    df['Sensor Variance']   = df.iloc[:, 2:10].var(axis=1)
-    df['Gyro Mean']       = df.iloc[:, 10:13].abs().mean(axis=1)
-    df['Gyro Variance']   = df.iloc[:, 10:13].var(axis=1)
-    df['Orientation Mean']       = df.iloc[:, 13:18].abs().mean(axis=1)
-    df['Orientation Variance']   = df.iloc[:, 13:18].var(axis=1)
-    return df
+    df2 = pd.DataFrame(columns=['Sensor Mean','Sensor Variance', 'Gyro Mean', 'Gyro Variance','Orientation Mean', 'Orientation Variance'])
+    df2['Sensor Mean']       = df.iloc[:, 9:17].abs().mean(axis=1)
+    df2['Sensor Variance']   = df.iloc[:, 9:17].var(axis=1)
+    df2['Gyro Mean']       = df.iloc[:, 1:4].abs().mean(axis=1)
+    df2['Gyro Variance']   = df.iloc[:, 1:4].var(axis=1)
+    df2['Orientation Mean']       = df.iloc[:, 5:9].abs().mean(axis=1)
+    df2['Orientation Variance']   = df.iloc[:, 5:9].var(axis=1)
+    return df, df2
 
 def zero_crossings(df):
     zcr = []
@@ -49,12 +50,13 @@ if len(sys.argv) >= 2 :
         #print(f)
         dados = pd.read_csv(f)
         #print(dados.head(10))
-        dados_novo = calc_mean_and_variance(dados)
+        dados_novo, mean_var_dados = calc_mean_and_variance(dados)
+        print(mean_var_dados.head())
         zero = zero_crossings(dados_novo)
         signal_change(dados_novo)
         #for i in range(8):
         #print(zero[i])
-        data.append([zero,signal_change])
+        data.append([zero,signal_change, mean_var_dados])
     print(data)
 else:
     print("missing argument")
