@@ -115,7 +115,6 @@ print(input_shape, y_train.shape, X_train.shape)
 optimizer = Adam(lr=0.1, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.01, amsgrad=False)
 
 classifier = Sequential()
-
 classifier.add(Dense(32, input_dim=X_train.shape[1]*X_train.shape[2]))
 classifier.add(Activation('relu'))
 classifier.add(Dense(units = 64))
@@ -130,7 +129,7 @@ X_train = X_train.reshape(X_train.shape[0], X_train.shape[1]*X_train.shape[2])
 
 classifier.compile(optimizer = optimizer, loss = 'binary_crossentropy', metrics=["accuracy"])
 
-classifier.fit(X_train, y_train, epochs = 250, batch_size = 43, verbose=2)
+classifier.fit(X_train, y_train, epochs = 10000, batch_size = 43, verbose=1)
 
 # Save
 classifier.save("model_cross_splited_data.h5")
@@ -151,9 +150,9 @@ def evaluateModel(prediction, y):
             good = good +1
     return (good/len(y)) * 100.0
 
-result_test = classifier.predict_classes(X_test)
-print("Correct classification rate on test data")
-print(evaluateModel(result_test, y_test))
+# result_test = classifier.predict_classes(X_test)
+# print("Correct classification rate on test data")
+# print(evaluateModel(result_test, y_test))
 
 result_train = classifier.predict_classes(X_train)
 print("Correct classification rate on train data")
