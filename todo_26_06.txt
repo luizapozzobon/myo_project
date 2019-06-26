@@ -1,0 +1,27 @@
+
+
+> Criar um notebook organizado
+> Plotar grafico bom e ruim para comparar
+
+> filtrar
+> plotar os graficos de novo(filtrado/original)
+
+> normalizar
+> features com dado normalizado(esqueci)
+> pca/ICA
+> graficos do pca/ica com subplots
+
+
+
+
+depoiiiiss
+
+svm
+random forest
+alguma rn
+nao precisa ltm
+
+
+
+HELP:
+Zero crossing/signal change
