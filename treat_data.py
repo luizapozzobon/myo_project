@@ -248,17 +248,16 @@ if len(sys.argv) >= 3 :
 
         print('Descrição dos dados: ')
         #print(dados.describe())
-        #----------- TODO testar isso
+
         # Filtrar, normalizar, zero crossings, signal change, calcular features e tocar tudo pra um csv
         emg_columns = ['Sensor 0', 'Sensor 1','Sensor 2', 'Sensor 3', 'Sensor 4', 'Sensor 5', 'Sensor 6', 'Sensor 7']
-        #dados[emg_columns] = filter_data(dados[emg_columns])
+        #dados[emg_columns] = filter_data(dados[emg_columns], sfreq=200, low_band=5/2.5, mid_band=58/2.5, high_band=72/2.5)
         dados = wilson_amplitude(dados, 20)
         #print(dados.head())
 
         normalized = norm_data(dados)
         #print(normalized.head(10))
 
-        #TODO arrumar zero crossings pro formato que o prof disse na aula?
         zero_cr = zero_crossings(normalized, emg_columns)
         signal_ch = signal_change(normalized)
         print('zero: ', zero_cr)
