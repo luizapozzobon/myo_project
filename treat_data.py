@@ -6,6 +6,7 @@ import os
 import glob
 import scipy as sp
 from scipy import signal
+import math
 
 def calc_mean_and_variance(df):
     # Cálculo para as linhas
@@ -94,7 +95,7 @@ def calc_mean_and_variance_column(df):
     # print(means)
     # print(variances)
     # print(variances.join(means))
-    return(means.join(variances))
+    return(means.join(variances, sort=False))
 
 def zero_crossings(df, columns):
     zcr = []
@@ -137,6 +138,8 @@ def signal_change(df):
             elif sig_center != sig_lower and sig_lower == sig_upper:
                 if np.abs(center_value) >= np.abs(upper_value):
                     signal_changed.append(j)
+            else:
+                signal_changed.append(0)
         sc.append(signal_changed)
     new_signal_changed = []
     for i in range(8):
@@ -152,47 +155,49 @@ def wilson_amplitude(emg, th):
     inds = 0
     ind = 0
     df2 = emg.copy()
+    s0 = np.array(emg['Sensor 0'])
+    s1 = np.array(emg['Sensor 1'])
+    s2 = np.array(emg['Sensor 2'])
+    s3 = np.array(emg['Sensor 3'])
+    s4 = np.array(emg['Sensor 4'])
+    s5 = np.array(emg['Sensor 5'])
+    s6 = np.array(emg['Sensor 6'])
+    s7 = np.array(emg['Sensor 7'])
 
-    for column in emg:
-        s0 = np.array(emg['Sensor 0'])
-        s1 = np.array(emg['Sensor 1'])
-        s2 = np.array(emg['Sensor 2'])
-        s3 = np.array(emg['Sensor 3'])
-        s4 = np.array(emg['Sensor 4'])
-        s5 = np.array(emg['Sensor 5'])
-        s6 = np.array(emg['Sensor 6'])
-        s7 = np.array(emg['Sensor 7'])
+    ind_th0 = (s0 < th) & (-th < s0)
+    ind_th1 = (s1 < th) & (-th < s1)
+    ind_th2 = (s2 < th) & (-th < s2)
+    ind_th3 = (s3 < th) & (-th < s3)
+    ind_th4 = (s4 < th) & (-th < s4)
+    ind_th5 = (s5 < th) & (-th < s5)
+    ind_th6 = (s6 < th) & (-th < s6)
+    ind_th7 = (s7 < th) & (-th < s7)
+    s0[ind_th0] = 0
+    s1[ind_th1] = 0
+    s2[ind_th2] = 0
+    s3[ind_th3] = 0
+    s4[ind_th4] = 0
+    s5[ind_th5] = 0
+    s6[ind_th6] = 0
+    s7[ind_th7] = 0
 
-        ind_th0 = (s0 < th) & (-th < s0)
-        ind_th1 = (s1 < th) & (-th < s1)
-        ind_th2 = (s2 < th) & (-th < s2)
-        ind_th3 = (s3 < th) & (-th < s3)
-        ind_th4 = (s4 < th) & (-th < s4)
-        ind_th5 = (s5 < th) & (-th < s5)
-        ind_th6 = (s6 < th) & (-th < s6)
-        ind_th7 = (s7 < th) & (-th < s7)
-        s0[ind_th0] = 0
-        s1[ind_th1] = 0
-        s2[ind_th2] = 0
-        s3[ind_th3] = 0
-        s4[ind_th4] = 0
-        s5[ind_th5] = 0
-        s6[ind_th6] = 0
-        s7[ind_th7] = 0
-
-        df2['Sensor 0'] = s0
-        df2['Sensor 1'] = s1
-        df2['Sensor 2'] = s2
-        df2['Sensor 3'] = s3
-        df2['Sensor 4'] = s4
-        df2['Sensor 5'] = s5
-        df2['Sensor 6'] = s6
-        df2['Sensor 7'] = s7
+    df2['Sensor 0'] = s0
+    df2['Sensor 1'] = s1
+    df2['Sensor 2'] = s2
+    df2['Sensor 3'] = s3
+    df2['Sensor 4'] = s4
+    df2['Sensor 5'] = s5
+    df2['Sensor 6'] = s6
+    df2['Sensor 7'] = s7
 
     return df2
 
 
 from pathlib import Path
+
+feature_name = 'features_wilson.csv'
+compilado_name = 'compilado_wilson.csv'
+
 
 if len(sys.argv) >= 3 :
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -204,9 +209,9 @@ if len(sys.argv) >= 3 :
     Label = sys.argv[2]
 
     #verifica se arquivo existe. se nçaoe xiste cria um df novo, senao abre o csv
-    comp = Path(current_dir +'/datasets/oficial/compilado.csv')
+    comp = Path(current_dir +'/datasets/oficial/' + compilado_name)
     if comp.is_file():
-        compilado = pd.read_csv(current_dir +'/datasets/oficial/compilado.csv')
+        compilado = pd.read_csv(current_dir +'/datasets/oficial/' + compilado_name)
     else:
         compilado = pd.DataFrame(columns=['Gyro 0', 'Gyro 1', 'Gyro 2',
            'Orientation 0', 'Orientation 1', 'Orientation 2', 'Orientation 3',
@@ -216,9 +221,9 @@ if len(sys.argv) >= 3 :
            'Orientation Variance'])
 
     #verifica se arquivo existe. se nçaoe xiste cria um df novo, senao abre o csv
-    feat = Path(current_dir +'/datasets/oficial/features.csv')
+    feat = Path(current_dir +'/datasets/oficial/' + feature_name)
     if feat.is_file():
-        features = pd.read_csv(current_dir +'/datasets/oficial/features.csv')
+        features = pd.read_csv(current_dir +'/datasets/oficial/' + feature_name)
     else:
         features = pd.DataFrame(columns=[
             'Gyro 0 Variance', 'Gyro 1 Variance', 'Gyro 2 Variance',
@@ -242,16 +247,16 @@ if len(sys.argv) >= 3 :
         dados = pd.read_csv(f).drop(columns=['Unnamed: 0','Timestamp','Label'])
 
         print('Descrição dos dados: ')
-        print(dados.describe())
+        #print(dados.describe())
         #----------- TODO testar isso
         # Filtrar, normalizar, zero crossings, signal change, calcular features e tocar tudo pra um csv
         emg_columns = ['Sensor 0', 'Sensor 1','Sensor 2', 'Sensor 3', 'Sensor 4', 'Sensor 5', 'Sensor 6', 'Sensor 7']
-        dados[emg_columns] = filter_data(dados[emg_columns])
-        #dados[emg_columns] = wilson_amplitude(dados[emg_columns], 7)
-        print(dados.head())
+        #dados[emg_columns] = filter_data(dados[emg_columns])
+        dados = wilson_amplitude(dados, 20)
+        #print(dados.head())
 
         normalized = norm_data(dados)
-        print(normalized.head(10))
+        #print(normalized.head(10))
 
         #TODO arrumar zero crossings pro formato que o prof disse na aula?
         zero_cr = zero_crossings(normalized, emg_columns)
@@ -260,22 +265,24 @@ if len(sys.argv) >= 3 :
         print('signal_changed: ', signal_ch)
         df_zero = pd.DataFrame([zero_cr], columns=['zcr '+str(i) for i in range(8)])
         df_sch = pd.DataFrame([signal_ch], columns=['sch '+str(i) for i in range(8)])
-        df_zero = df_zero.join(df_sch)
+        df_zero = df_zero.join(df_sch, sort=False)
 
         features_temp = calc_mean_and_variance_column(normalized)
         features_temp['Label'] = Label
-        features_temp = features_temp.join(df_zero)
-        features = features.append(features_temp, ignore_index=True)
+        features_temp = features_temp.join(df_zero, sort=False)
+        features = features.append(features_temp, ignore_index=True, sort=False)
+
+        print(features)
 
         new_name = filename.replace('.csv','novo.csv')
         # print(new_name)
         if not os.path.exists(pasta_treated):
             os.mkdir(pasta_treated)
         normalized.to_csv(pasta_treated +'/'+ new_name,index = False)
-        compilado = compilado.append(normalized, ignore_index=True)
+        compilado = compilado.append(normalized, ignore_index=True, sort=False)
 
-    compilado.to_csv(current_dir + '/datasets/oficial/compilado.csv',index = False)
-    features.to_csv(current_dir +'/datasets/oficial/features.csv', index = False, decimal=".")
+    compilado.to_csv(current_dir + '/datasets/oficial/' + compilado_name, index = False)
+    features.to_csv(current_dir +'/datasets/oficial/' + feature_name, index = False, decimal=".")
 
 else:
     print("missing argument")

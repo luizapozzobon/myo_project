@@ -5,6 +5,7 @@ import glob
 import os
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
 sc = MinMaxScaler(feature_range = (0, 1))
 
 print(tf.VERSION)
@@ -46,6 +47,12 @@ def load_data():
             x_test = pd.concat([x_test, df], sort=False)
         count += 1
 
+def load_compilado(arquivo):
+    path = '/home/luiza/UFSM/Myo/myo_project/datasets/oficial/' + arquivo
+    df = pd.read_csv(path)
+    return df
+
+
 def get_labels():
     global y_test, y_train, x_train, x_test
     """Get labels columns from df and drop them"""
@@ -54,9 +61,11 @@ def get_labels():
     y_test = x_test["Label"]
     x_test = x_test.drop(columns=["Label"])
 
-load_data()
-get_labels()
+df = load_compilado('compilado.csv')
+df_labels = df[df['Label']]
+df = df.drop('Label')
 
+x_train, x_test, y_train, y_test = train_test_split(df.values, df_labels.values, test_size=0.3, random_state=0)
 
 print('All Data:')
 print(x_train.head(), x_train.shape)
