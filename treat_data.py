@@ -12,7 +12,7 @@ def calc_mean_and_variance(df):
     # Não usado
     scaler = preprocessing.MinMaxScaler(feature_range=(-127, 127))
     #print('loc', df.iloc[:, 2:10])
-    df2 = pd.DataFrame(columns=['Sensor Mean','Sensor Variance', 'Gyro Mean', 'Gyro Variance','Orientation Mean', 'Orientation Variance'])
+    df1 = pd.DataFrame(columns=['Sensor Mean','Sensor Variance', 'Gyro Mean', 'Gyro Variance','Orientation Mean', 'Orientation Variance'])
     df.iloc[:]        = pd.DataFrame(scaler.fit_transform(df.iloc[:]), columns=df.columns)
     df2['Sensor Mean']       = df[['Sensor 0','Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6','Sensor 7']].abs().mean(axis=1)
     df2['Sensor Variance']   = df[['Sensor 0','Sensor 1','Sensor 2','Sensor 3','Sensor 4','Sensor 5','Sensor 6','Sensor 7']].abs().var(axis=1)
@@ -32,23 +32,21 @@ def filter_data(emg, low_band=5, mid_band=58, high_band=72, sfreq=200):
     """
     for column in emg:
         # create highpass filter for EMG for first 5hz
-        low_band = low_band/(sfreq)
-        b1, a1 = sp.signal.butter(4, low_band, btype='highpass')
-        # process EMG signal: filter EMG
-        print(emg[column].values)
-        emg_filtered = sp.signal.filtfilt(b1, a1, emg[column].values)
-        print(emg[column].values)
+        low_band = low_band/(sfreq/2)
+        #b1, a1 = sp.signal.butter(2, low_band, btype='highpass')
+        #emg_filtered = sp.signal.filtfilt(b1, a1, emg[column].values)
+        sos = sp.signal.butter(2, low_band, btype='highpass', output='sos')
+        emg_filtered = sp.signal.sosfilt(sos, emg[column].values)
 
         # normalise cut-off frequencies to sampling frequency
-        high_band = high_band/(sfreq)
-        mid_band = mid_band/(sfreq)
+        high_band = high_band/(sfreq/2)
+        mid_band = mid_band/(sfreq/2)
         # create second bandpass filter for EMG
-        b1, a1 = sp.signal.butter(4, [mid_band, high_band], btype='bandstop')
-        emg_filtered2 = sp.signal.filtfilt(b1, a1, emg_filtered)
-
+        #b1, a1 = sp.signal.butter(2, [mid_band, high_band], btype='bandstop')
+        #emg_filtered2 = sp.signal.filtfilt(b1, a1, emg_filtered)
+        sos = sp.signal.butter(2, [mid_band, high_band], btype='bandstop', output='sos')
+        emg_filtered2 = sp.signal.sosfilt(sos, emg_filtered)
         emg[column] = emg_filtered2
-        print(column)
-    print(emg)
     return emg
 
 def norm_data(df):
@@ -218,9 +216,9 @@ if len(sys.argv) >= 3 :
            'Orientation Variance'])
 
     #verifica se arquivo existe. se nçaoe xiste cria um df novo, senao abre o csv
-    feat = Path(current_dir +'/datasets/oficial/features2.csv')
+    feat = Path(current_dir +'/datasets/oficial/features.csv')
     if feat.is_file():
-        features = pd.read_csv(current_dir +'/datasets/oficial/features2.csv')
+        features = pd.read_csv(current_dir +'/datasets/oficial/features.csv')
     else:
         features = pd.DataFrame(columns=[
             'Gyro 0 Variance', 'Gyro 1 Variance', 'Gyro 2 Variance',
@@ -248,8 +246,8 @@ if len(sys.argv) >= 3 :
         #----------- TODO testar isso
         # Filtrar, normalizar, zero crossings, signal change, calcular features e tocar tudo pra um csv
         emg_columns = ['Sensor 0', 'Sensor 1','Sensor 2', 'Sensor 3', 'Sensor 4', 'Sensor 5', 'Sensor 6', 'Sensor 7']
-        #dados[emg_columns] = filter_data(dados[emg_columns])
-        dados[emg_columns] = wilson_amplitude(dados[emg_columns], 7)
+        dados[emg_columns] = filter_data(dados[emg_columns])
+        #dados[emg_columns] = wilson_amplitude(dados[emg_columns], 7)
         print(dados.head())
 
         normalized = norm_data(dados)
@@ -273,11 +271,11 @@ if len(sys.argv) >= 3 :
         # print(new_name)
         if not os.path.exists(pasta_treated):
             os.mkdir(pasta_treated)
-        #dados_novos.to_csv(pasta_treated +'/'+ new_name,index = False)
-        #compilado = compilado.append(dados_novos,ignore_index=True)
+        normalized.to_csv(pasta_treated +'/'+ new_name,index = False)
+        compilado = compilado.append(normalized, ignore_index=True)
 
-    #compilado.to_csv(current_dir + '/datasets/oficial/compilado.csv',index = False)
-    features.to_csv(current_dir +'/datasets/oficial/featuresv2.csv',index = False)
+    compilado.to_csv(current_dir + '/datasets/oficial/compilado.csv',index = False)
+    features.to_csv(current_dir +'/datasets/oficial/features.csv', index = False, decimal=".")
 
 else:
     print("missing argument")
