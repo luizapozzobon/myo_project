@@ -195,8 +195,8 @@ def wilson_amplitude(emg, th):
 
 from pathlib import Path
 
-feature_name = 'features_wilson.csv'
-compilado_name = 'compilado_wilson.csv'
+feature_name = 'features_certo.csv'
+compilado_name = 'compilado_certo.csv'
 
 
 if len(sys.argv) >= 3 :
@@ -240,7 +240,6 @@ if len(sys.argv) >= 3 :
 
     # itera sobre todos os csv da pasta indicada
     for f in files:
-        # IDEIA -> fazer com e sem amplitude de wilson pra comparar
 
         print(f)
         filename = f.replace(pasta,'')
@@ -251,8 +250,8 @@ if len(sys.argv) >= 3 :
 
         # Filtrar, normalizar, zero crossings, signal change, calcular features e tocar tudo pra um csv
         emg_columns = ['Sensor 0', 'Sensor 1','Sensor 2', 'Sensor 3', 'Sensor 4', 'Sensor 5', 'Sensor 6', 'Sensor 7']
-        #dados[emg_columns] = filter_data(dados[emg_columns], sfreq=200, low_band=5/2.5, mid_band=58/2.5, high_band=72/2.5)
-        dados = wilson_amplitude(dados, 20)
+        dados[emg_columns] = filter_data(dados[emg_columns], sfreq=200, low_band=5/2.5, mid_band=58/2.5, high_band=72/2.5)
+        #dados = wilson_amplitude(dados, 20)
         #print(dados.head())
 
         normalized = norm_data(dados)
@@ -260,7 +259,7 @@ if len(sys.argv) >= 3 :
 
         zero_cr = zero_crossings(normalized, emg_columns)
         signal_ch = signal_change(normalized)
-        print('zero: ', zero_cr)
+        print:'zero: ', zero_cr)
         print('signal_changed: ', signal_ch)
         df_zero = pd.DataFrame([zero_cr], columns=['zcr '+str(i) for i in range(8)])
         df_sch = pd.DataFrame([signal_ch], columns=['sch '+str(i) for i in range(8)])
